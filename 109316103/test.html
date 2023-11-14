@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FHIR Height and Weight</title>
+    <script src="data.json"></script>
+
+    <script>
+        // condition.js
+
+        var conditionObj = {
+            "resourceType": "Observation",
+            "status": "final",
+            "code": {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "XXX",
+                        "display": "身高和體重測量"
+                    }
+                ],
+                "text": "身高和體重"
+            },
+            "subject": {
+                "reference": "Patient/11450666"
+            },
+            "effectiveDateTime": "2023-10-17T08:00:00Z",
+            "component": [
+                {
+                    "code": {
+                        "coding": [
+                            {
+                                "system": "http://loinc.org",
+                                "code": "8302-2",
+                                "display": "身高"
+                            }
+                        ],
+                        "text": "身高"
+                    },
+                    "valueQuantity": {
+                        "value": 0,  // 身高的初始值
+                        "unit": "cm",
+                        "system": "http://unitsofmeasure.org",
+                        "code": "cm"
+                    }
+                },
+                {
+                    "code": {
+                        "coding": [
+                            {
+                                "system": "http://loinc.org",
+                                "code": "29463-7",
+                                "display": "體重"
+                            }
+                        ],
+                        "text": "體重"
+                    },
+                    "valueQuantity": {
+                        "value": 0,  // 體重的初始值
+                        "unit": "kg",
+                        "system": "http://unitsofmeasure.org",
+                        "code": "kg"
+                    }
+                }
+            ]
+        }
+
+        function postData() {
+            // 更新身高和體重的值
+            conditionObj.component[0].valueQuantity.value = parseFloat(document.getElementById("height").value);
+            conditionObj.component[1].valueQuantity.value = parseFloat(document.getElementById("weight").value);
+
+            var FHIRrootURL = "https://hapi.fhir.org/baseR4/";
+            var apiURL = FHIRrootURL + "Observation?subject=11450666";
+            HTTPGetData(apiURL, JSON.stringify(conditionObj));
+        }
+
+        function HTTPGetData(urlStr, dataStr) {
+            var HttpObj = new XMLHttpRequest();
+            HttpObj.open("POST", urlStr, true);
+            HttpObj.setRequestHeader("Content-type", "application/json+fhir");
+            HttpObj.onreadystatechange = function () {
+                if (HttpObj.readyState === 4) {
+                    var ret = HttpObj.responseText;
+                    var jsonOBJ = JSON.parse(ret);
+                    if ("id" in jsonOBJ && jsonOBJ.hasOwnProperty("id"))
+                        alert("上傳成功！" + "問卷編號：" + jsonOBJ["id"]);
+                    else
+                        alert("上傳失敗！" + ret);
+                }
+            }
+
+            HttpObj.send(dataStr);
+        }
+    </script>
+</head>
+
+<body>
+
+    <h1>FHIR Height and Weight 上傳</h1>
+
+    <form id="observationForm">
+        <p>請上傳身高和體重</p>
+
+        <label for="height">身高 (cm):</label>
+        <input type="number" id="height" step="0.1" /><br /><br />
+
+        <label for="weight">體重 (kg):</label>
+        <input type="number" id="weight" step="0.1" /><br /><br />
+
+        <p></p>
+        <button type="button" onclick="postData()">上傳</button><br /><br />
+    </form>
+</body>
+
+</html>
